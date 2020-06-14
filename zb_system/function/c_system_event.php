@@ -410,6 +410,21 @@ function ViewFeed()
 
     $w = array(array('=', 'log_Status', 0));
 
+    if (GetVars('cate', 'GET') != null) {
+        $w[] = array('=', 'log_CateID', (int) GetVars('cate', 'GET'));
+    } elseif (GetVars('auth', 'GET') != null) {
+        $w[] = array('=', 'log_AuthorID', (int) GetVars('auth', 'GET'));
+    } elseif (GetVars('date', 'GET') != null) {
+        $d = strtotime(GetVars('date', 'GET'));
+        if (strrpos(GetVars('date', 'GET'), '-') !== strpos(GetVars('date', 'GET'), '-')) {
+            $w[] = array('BETWEEN', 'log_PostTime', $d, strtotime('+1 day', $d));
+        } else {
+            $w[] = array('BETWEEN', 'log_PostTime', $d, strtotime('+1 month', $d));
+        }
+    } elseif (GetVars('tags', 'GET') != null) {
+        $w[] = array('LIKE', 'log_Tag', '%{' . (int) GetVars('tags', 'GET') . '}%');
+    }
+
     foreach ($GLOBALS['hooks']['Filter_Plugin_ViewFeed_Core'] as $fpname => &$fpsignal) {
         $fpname($w);
     }
@@ -886,8 +901,10 @@ function ViewList($page, $cate, $auth, $date, $tags, $isrewrite = false)
             } else {
                 $arysubcate = array();
                 $arysubcate[] = array('log_CateID', $category->ID);
-                foreach ($zbp->categories[$category->ID]->ChildrenCategories as $subcate) {
-                    $arysubcate[] = array('log_CateID', $subcate->ID);
+                if (isset($zbp->categories[$category->ID])) {
+                    foreach ($zbp->categories[$category->ID]->ChildrenCategories as $subcate) {
+                        $arysubcate[] = array('log_CateID', $subcate->ID);
+                    }
                 }
                 $w[] = array('array', $arysubcate);
             }
@@ -3518,11 +3535,13 @@ function FilterCategory(&$category)
 {
     global $zbp;
     $category->Name = strip_tags($category->Name);
+    $category->Name = trim($category->Name);
     $category->Alias = FormatString($category->Alias, '[normalname]');
     //$category->Alias=str_replace('/','',$category->Alias);
     $category->Alias = str_replace('.', '', $category->Alias);
     $category->Alias = str_replace(' ', '', $category->Alias);
     $category->Alias = str_replace('_', '', $category->Alias);
+    $category->Alias = trim($category->Alias);
 }
 
 /**
@@ -3534,7 +3553,9 @@ function FilterTag(&$tag)
 {
     global $zbp;
     $tag->Name = strip_tags($tag->Name);
+    $tag->Name = trim($tag->Name);
     $tag->Alias = FormatString($tag->Alias, '[normalname]');
+    $tag->Alias = trim($tag->Alias);
 }
 
 //###############################################################################################################

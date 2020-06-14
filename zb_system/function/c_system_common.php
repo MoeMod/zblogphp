@@ -257,8 +257,11 @@ function GetEnvironment()
         $ajax = substr(get_class($ajax), 9);
     }
     if ($ajax == 'curl') {
-        if (ini_get("safe_mode") || (version_compare(PHP_VERSION, '5.6.0', '<') && ini_get("open_basedir"))) {
-            $ajax .= '-safemode';
+        if (ini_get("safe_mode")) {
+            $ajax .= '-s';
+        }
+        if (ini_get("open_basedir")) {
+            $ajax .= '-o';
         }
         $array = curl_version();
         $ajax .= $array['version'];
@@ -1046,21 +1049,24 @@ function HasNameInString($s, $name)
  */
 function JsonError4ShowErrorHook($errorCode, $errorString, $file, $line)
 {
+    if ($errorCode === 0) {
+        $errorCode = 1;
+    }
     JsonError($errorCode, $errorString, null);
 }
 
 /**
- * 以JSON形式输出错误信息.(err code为0认为是没有错误，所以把0转为1)
+ * 以JSON形式输出错误信息.(err code为(int)0认为是没有错误，所以把0转为1)
  *
  * @param string $errorCode   错误编号
  * @param string $errorString 错误内容
  * @param object $data 具体内容
- * @param boolean $exit 是否exit退出
  */
-function JsonError($errorCode, $errorString, $data, $exit = true)
+function JsonError($errorCode, $errorString, $data)
 {
-    if ($errorCode == 0 && $exit) {
-        $errorCode = 1;
+    $exit = true;
+    if ($errorCode === 0) {
+        $exit = false;
     }
     $result = array(
         'data' => $data,
@@ -1085,7 +1091,7 @@ function JsonError($errorCode, $errorString, $data, $exit = true)
  */
 function JsonReturn($data)
 {
-    JsonError(0, "", $data, false);
+    JsonError(0, '', $data);
 }
 
 /**

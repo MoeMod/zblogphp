@@ -84,9 +84,9 @@ function Include_Admin_UpdateDB()
 {
     global $zbp;
 
-    if ($zbp->version >= 162330 && (int) $zbp->option['ZC_LAST_VERSION'] < 162330) {
+    if ($zbp->version >= 172330 && (int) $zbp->option['ZC_LAST_VERSION'] < 172330) {
         if (substr(GetValueInArray(get_included_files(), 0), -9) == 'index.php') {
-            $zbp->SetHint('tips', '<a href="#" onclick="$.get(bloghost+\'zb_system/admin/updatedb.php\', function(data){alert(\'' . $zbp->langs->msg->operation_succeed . '\');window.location.reload();});">' . @$zbp->langs->msg->update_db . '</a>');
+            $zbp->SetHint('tips', '<a href="#" onclick="$.get(bloghost+\'zb_system/admin/updatedb.php\', function(data){alert(JSON.parse(data).data);window.location.reload();});">' . @$zbp->langs->msg->update_db . '</a>');
         }
     }
 }
@@ -98,6 +98,9 @@ function Include_Admin_CheckHttp304OK()
 {
     global $zbp, $action;
     if ($action != 'admin') {
+        return;
+    }
+    if (!$zbp->CheckRights('root')) {
         return;
     }
     if (GetVars('http304ok', 'COOKIE') !== '1') {
@@ -1627,7 +1630,7 @@ function Admin_ThemeMng()
         }
 
         if ($theme->IsUsed() && $theme->path) {
-            echo '<a href="' . $theme->GetManageUrl() . '" title="管理" class="button"><img width="16" title="" alt="" src="../image/admin/setting_tools.png"/></a>&nbsp;&nbsp;';
+            echo '<a href="' . $theme->GetManageUrl() . '" title="' . $zbp->lang['msg']['manage'] . '" class="button"><img width="16" title="" alt="" src="../image/admin/setting_tools.png"/></a>&nbsp;&nbsp;';
         } else {
             echo '<img width="16" title="" alt="" src="../image/admin/layout.png"/>&nbsp;&nbsp;';
         }
@@ -1636,7 +1639,7 @@ function Admin_ThemeMng()
         echo '<div><img src="' . $theme->GetScreenshot() . '" title="' . htmlspecialchars($theme->name) . '" alt="' . htmlspecialchars($theme->name) . '" width="200" height="150" /></div>';
         echo '<div class="theme-author">' . $zbp->lang['msg']['author'] . ': <a target="_blank" href="' . htmlspecialchars($theme->author_url) . '">' . htmlspecialchars($theme->author_name) . '</a></div>';
         echo '<div class="theme-style">';
-        echo '<select class="edit" size="1" style="width:130px;">';
+        echo '<select class="edit" size="1" title="' . $zbp->lang['msg']['style'] . '">';
         foreach ($theme->GetCssFiles() as $key => $value) {
             echo '<option value="' . htmlspecialchars($key) . '" ' . ($theme->IsUsed() ? ($key == $zbp->style ? 'selected="selected"' : '') : '') . '>' . basename($value) . '</option>';
         }
